@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:developer' as developer;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -8,31 +9,34 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      UserCredential userCredential;
-
       if (kIsWeb) {
-        // For web, use signInWithPopup
-        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-        userCredential = await _auth.signInWithPopup(googleProvider);
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        final UserCredential userCredential = await _auth.signInWithPopup(googleProvider);
+        return userCredential.user;
       } else {
-        // For mobile, use the existing GoogleSignIn flow
         final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
         if (googleUser == null) {
-          // The user canceled the sign-in
           return null;
         }
 
-        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
         final AuthCredential credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
-        userCredential = await _auth.signInWithCredential(credential);
-      }
 
-      return userCredential.user;
-    } catch (e) {
-      print('Error during Google sign-in: $e'); // For debugging
+        final UserCredential userCredential = await _auth.signInWithCredential(credential);
+        return userCredential.user;
+      }
+    } catch (e, s) {
+      developer.log(
+        'Error during Google sign-in',
+        name: 'auth_service',
+        error: e,
+        stackTrace: s,
+      );
       return null;
     }
   }
