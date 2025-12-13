@@ -50,9 +50,11 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              final router = GoRouter.of(context);
               await _authService.signOut();
-              if (!mounted) return;
-              context.go('/');
+              if (mounted) {
+                router.go('/');
+              }
             },
             tooltip: 'Sign Out',
           ),

@@ -61,19 +61,6 @@ class WelcomeScreen extends StatelessWidget {
                   }
                 },
               ),
-              const SizedBox(height: 20),
-              _buildSignInButton(
-                context,
-                text: 'Sign in with Facebook',
-                icon: Icons.facebook,
-                onPressed: () async {
-                  final user = await authService.signInWithFacebook();
-                  if (user != null) {
-                    if (!context.mounted) return;
-                    context.go('/home');
-                  }
-                },
-              ),
             ],
           ),
         ),

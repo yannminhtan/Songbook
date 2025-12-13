@@ -1,1 +1,34 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"songbook-f75fd","appId":"1:237461301408:android:790cf4d54aa16a64e541c5","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"songbook-f75fd","configurations":{"android":"1:237461301408:android:790cf4d54aa16a64e541c5","ios":"1:237461301408:ios:ba23404189b06a69e541c5","macos":"1:237461301408:ios:ba23404189b06a69e541c5","web":"1:237461301408:web:6b47ab9d5707d0b1e541c5","windows":"1:237461301408:web:64f79b4178e19318e541c5"}}}}}}
+
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "songbook-f75fd",
+          "appId": "1:237461301408:android:790cf4d54aa16a64e541c5",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "songbook-f75fd",
+          "configurations": {
+            "android": "1:237461301408:android:790cf4d54aa16a64e541c5",
+            "ios": "1:237461301408:ios:ba23404189b06a69e541c5",
+            "macos": "1:237461301408:ios:ba23404189b06a69e541c5",
+            "web": "1:237461301408:web:6b47ab9d5707d0b1e541c5",
+            "windows": "1:237461301408:web:64f79b4178e19318e541c5"
+          }
+        }
+      }
+    }
+  }
+}
