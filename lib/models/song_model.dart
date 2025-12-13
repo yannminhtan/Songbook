@@ -5,14 +5,18 @@ class Song {
   final String title;
   final String artist;
   final String lyrics;
-  final String? youtubeUrl;
+  final String? key;
+  final int? tempo;
+  final String? uploaderId;
 
   Song({
     required this.id,
     required this.title,
     required this.artist,
     required this.lyrics,
-    this.youtubeUrl,
+    this.key,
+    this.tempo,
+    this.uploaderId,
   });
 
   // Convert a Song object into a map
@@ -21,7 +25,9 @@ class Song {
       'title': title,
       'artist': artist,
       'lyrics': lyrics,
-      'youtubeUrl': youtubeUrl,
+      'key': key,
+      'tempo': tempo,
+      'uploaderId': uploaderId,
     };
   }
 
@@ -33,7 +39,9 @@ class Song {
       title: data['title'] ?? '',
       artist: data['artist'] ?? '',
       lyrics: data['lyrics'] ?? '',
-      youtubeUrl: data['youtubeUrl'] as String?,
+      key: data['key'] as String?,
+      tempo: data['tempo'] as int?,
+      uploaderId: data['uploaderId'] as String?,
     );
   }
 
@@ -43,14 +51,18 @@ class Song {
     String? title,
     String? artist,
     String? lyrics,
-    String? youtubeUrl,
+    String? key,
+    int? tempo,
+    String? uploaderId,
   }) {
     return Song(
       id: id ?? this.id,
       title: title ?? this.title,
       artist: artist ?? this.artist,
       lyrics: lyrics ?? this.lyrics,
-      youtubeUrl: youtubeUrl ?? this.youtubeUrl,
+      key: key ?? this.key,
+      tempo: tempo ?? this.tempo,
+      uploaderId: uploaderId ?? this.uploaderId,
     );
   }
 }

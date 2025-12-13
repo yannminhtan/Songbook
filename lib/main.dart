@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:myapp/providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:myapp/firebase_options.dart';
-import 'package:myapp/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/screens/welcome_screen.dart';
 import 'package:myapp/screens/home_screen.dart';
-import 'package:myapp/screens/song_detail_screen.dart';
+import 'package:myapp/screens/song_screen.dart';
 import 'package:myapp/screens/add_song_screen.dart';
 import 'package:myapp/screens/edit_song_screen.dart';
 
@@ -24,16 +24,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = AuthService();
-
     final router = GoRouter(
       initialLocation: '/',
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => authService.authStateChanges.isBroadcast 
-              ? const HomeScreen() 
-              : const WelcomeScreen(),
+          builder: (context, state) {
+            return StreamBuilder(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+                if (snapshot.hasData) {
+                  return const HomeScreen();
+                }
+                return const WelcomeScreen();
+              },
+            );
+          },
         ),
         GoRoute(
           path: '/home',
@@ -41,7 +50,7 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/song/:id',
-          builder: (context, state) => SongDetailScreen(
+          builder: (context, state) => SongScreen(
             songId: state.pathParameters['id']!,
           ),
         ),
@@ -66,11 +75,11 @@ class MyApp extends StatelessWidget {
             title: 'Kaekae Songbook',
             theme: ThemeData(
               brightness: Brightness.light,
-              primarySwatch: Colors.blue,
+              colorSchemeSeed: Colors.blue,
             ),
             darkTheme: ThemeData(
               brightness: Brightness.dark,
-              primarySwatch: Colors.blue,
+              colorSchemeSeed: Colors.blue,
             ),
             themeMode: themeProvider.themeMode,
             routerConfig: router,

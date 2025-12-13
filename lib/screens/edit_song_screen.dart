@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/models/song_model.dart';
+import 'package:myapp/models/edit_suggestion_model.dart';
 import 'package:myapp/services/song_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EditSongScreen extends StatefulWidget {
   final String songId;
@@ -17,8 +19,11 @@ class _EditSongScreenState extends State<EditSongScreen> {
   final _titleController = TextEditingController();
   final _artistController = TextEditingController();
   final _lyricsController = TextEditingController();
-  final _youtubeUrlController = TextEditingController();
+  final _keyController = TextEditingController();
+  final _tempoController = TextEditingController();
+
   final SongService _songService = SongService();
+  final _auth = FirebaseAuth.instance;
   late Future<Song> _songFuture;
 
   @override
@@ -29,7 +34,8 @@ class _EditSongScreenState extends State<EditSongScreen> {
       _titleController.text = song.title;
       _artistController.text = song.artist;
       _lyricsController.text = song.lyrics;
-      _youtubeUrlController.text = song.youtubeUrl ?? '';
+      _keyController.text = song.key ?? '';
+      _tempoController.text = song.tempo?.toString() ?? '';
     });
   }
 
@@ -37,7 +43,7 @@ class _EditSongScreenState extends State<EditSongScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Song'),
+        title: const Text('Suggest an Edit'),
       ),
       body: FutureBuilder<Song>(
         future: _songFuture,
@@ -46,52 +52,42 @@ class _EditSongScreenState extends State<EditSongScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: ListView(
+          return Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  TextFormField(
-                    controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter a title' : null,
+                  _buildTextField(_titleController, 'Title'),
+                  const SizedBox(height: 16),
+                  _buildTextField(_artistController, 'Artist'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(_keyController, 'Key (e.g., G, Am)'),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildTextField(
+                          _tempoController,
+                          'Tempo (BPM)',
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
                   ),
-                  TextFormField(
-                    controller: _artistController,
-                    decoration: const InputDecoration(labelText: 'Artist'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter an artist' : null,
-                  ),
-                  TextFormField(
-                    controller: _lyricsController,
-                    decoration: const InputDecoration(labelText: 'Lyrics'),
-                    maxLines: 10,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter lyrics' : null,
-                  ),
-                  TextFormField(
-                    controller: _youtubeUrlController,
-                    decoration: const InputDecoration(labelText: 'YouTube URL (Optional)'),
-                  ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  _buildTextField(_lyricsController, 'Lyrics with Chords', maxLines: 15),
+                  const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        final updatedSong = Song(
-                          id: widget.songId,
-                          title: _titleController.text,
-                          artist: _artistController.text,
-                          lyrics: _lyricsController.text,
-                          youtubeUrl: _youtubeUrlController.text,
-                        );
-                        await _songService.updateSong(updatedSong);
-                        if (!mounted) return;
-                        context.pop();
-                      }
-                    },
-                    child: const Text('Update Song'),
+                    onPressed: _submitSuggestion,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: const TextStyle(fontSize: 18),
+                    ),
+                    child: const Text('Submit Suggestion'),
                   ),
                 ],
               ),
@@ -100,5 +96,51 @@ class _EditSongScreenState extends State<EditSongScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, {int maxLines = 1, TextInputType? keyboardType}) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        alignLabelWithHint: true,
+      ),
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      validator: (value) => value!.isEmpty ? 'Please enter the $label' : null,
+    );
+  }
+
+  void _submitSuggestion() async {
+    if (_formKey.currentState!.validate()) {
+      final user = _auth.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You must be logged in to suggest an edit.')),
+        );
+        return;
+      }
+
+      final suggestion = EditSuggestion(
+        id: '',
+        songId: widget.songId,
+        suggestedById: user.uid,
+        title: _titleController.text,
+        artist: _artistController.text,
+        lyrics: _lyricsController.text,
+        key: _keyController.text,
+        tempo: int.tryParse(_tempoController.text) ?? 0,
+        createdAt: DateTime.now(),
+      );
+
+      await _songService.submitEditSuggestion(suggestion);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Thank you! Your suggestion has been submitted.')),
+      );
+      context.pop();
+    }
   }
 }

@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "237461301408",
+    "project_id": "songbook-f75fd",
+    "storage_bucket": "songbook-f75fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237461301408:android:790cf4d54aa16a64e541c5",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "237461301408-trc3m24o25s1978spptasu9jtoe9afk1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-NOVLcorB7iKYoO36tMSS1-pmOiV5vpI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "237461301408-trc3m24o25s1978spptasu9jtoe9afk1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237461301408:android:0edce4c8896dd091e541c5",
+        "android_client_info": {
+          "package_name": "com.yannminhtan.songbook"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "237461301408-02rs79d4ha5o9s5biqnodc66m0rtf9ef.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yannminhtan.songbook",
+            "certificate_hash": "bc44b951f8fb227e24e0e585976882bf7100dccd"
+          }
+        },
+        {
+          "client_id": "237461301408-trc3m24o25s1978spptasu9jtoe9afk1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-NOVLcorB7iKYoO36tMSS1-pmOiV5vpI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "237461301408-trc3m24o25s1978spptasu9jtoe9afk1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

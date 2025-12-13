@@ -5,6 +5,7 @@ import 'package:myapp/models/song_model.dart';
 import 'package:myapp/services/song_service.dart';
 import 'package:myapp/services/auth_service.dart';
 import 'package:myapp/providers/theme_provider.dart';
+import 'package:myapp/widgets/song_post_card.dart'; // Import the new widget
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -60,12 +61,15 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0),
             child: TextField(
               onChanged: _onSearchChanged,
               decoration: const InputDecoration(
-                labelText: 'Search by title or artist',
-                border: OutlineInputBorder(),
+                hintText: 'Search for songs, artists, or creators...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                ),
               ),
             ),
           ),
@@ -92,27 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return ListView.builder(
                   itemCount: songs.length,
                   itemBuilder: (context, index) {
-                    Song song = songs[index];
-                    return ListTile(
-                      title: Text(song.title),
-                      subtitle: Text(song.artist),
-                      onTap: () => context.go('/song/${song.id}'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () => context.go('/edit-song/${song.id}'),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () async {
-                              await _songService.deleteSong(song.id);
-                            },
-                          ),
-                        ],
-                      ),
-                    );
+                    return SongPostCard(song: songs[index]);
                   },
                 );
               },
