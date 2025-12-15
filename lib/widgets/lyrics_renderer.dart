@@ -1,84 +1,90 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 
 class LyricsRenderer extends StatelessWidget {
   final String content;
   final double lyricFontSize;
   final double chordFontSize;
-  final Color textColor;
-  final Color chordColor;
+  final Color? textColor;
+  final Color? chordColor;
 
   const LyricsRenderer({
     super.key,
     required this.content,
     this.lyricFontSize = 16.0,
     this.chordFontSize = 14.0,
-    this.textColor = Colors.black,
-    this.chordColor = Colors.blue,
+    this.textColor,
+    this.chordColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final defaultTextColor = textColor ?? Theme.of(context).colorScheme.onSurface;
+    final defaultChordColor = chordColor ?? Theme.of(context).colorScheme.primary;
+
     List<String> lines = content.split('\n');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: lines.map((line) => _buildLine(context, line)).toList(),
+      children: lines
+          .map((line) =>
+              _buildLine(context, line, defaultTextColor, defaultChordColor))
+          .toList(),
     );
   }
 
-  Widget _buildLine(BuildContext context, String line) {
-    final chordRegex = RegExp(r'\[([^\]]+)\]');
-    String cleanLyrics = line.replaceAll(chordRegex, '');
-    List<Widget> chords = [];
-    
-    int accumulatedLength = 0;
-    for (var match in chordRegex.allMatches(line)) {
-        final chordText = match.group(1)!;
-        final textBeforeChord = line.substring(0, match.start - accumulatedLength);
-        final offset = _getTextWidth(textBeforeChord, TextStyle(fontSize: lyricFontSize));
-        
-        chords.add(
-            Positioned(
-                left: offset,
-                child: Text(
-                    chordText,
-                    style: TextStyle(
-                        fontSize: chordFontSize,
-                        fontWeight: FontWeight.bold,
-                        color: chordColor,
-                    ),
-                ),
-            ),
-        );
-        accumulatedLength += match.group(0)!.length;
+  Widget _buildLine(BuildContext context, String line, Color textColor, Color chordColor) {
+    final segments = line.split(RegExp(r'(?=\[)')); // split before '['
+
+    if (segments.isEmpty) {
+      return Container();
     }
 
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.end,
+        alignment: WrapAlignment.start,
+        spacing: 0, // Horizontal space between segments
+        runSpacing: 4.0, // Vertical space between lines if wrapped
+        children: segments.map((segment) {
+          if (segment.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            // Invisible row of chords to calculate height
-            Row(children: [Text(" ", style: TextStyle(fontSize: chordFontSize, fontWeight: FontWeight.bold),)]), 
-            ...chords
-          ],
-        ),
-        Text(
-          cleanLyrics,
-          style: TextStyle(fontSize: lyricFontSize, color: textColor),
-        ),
-        const SizedBox(height: 16),
-      ],
+          final match = RegExp(r'\[([^\]]+)\](.*)', dotAll: true).firstMatch(segment);
+
+          if (match != null) {
+            final chord = match.group(1)!;
+            final lyric = match.group(2)!;
+            return _buildSegment(context, chord, lyric, textColor, chordColor);
+          } else {
+            return _buildSegment(context, null, segment, textColor, chordColor);
+          }
+        }).toList(),
+      ),
     );
   }
 
-  double _getTextWidth(String text, TextStyle style) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      maxLines: 1,
-      textDirection: ui.TextDirection.ltr,
-    )..layout(minWidth: 0, maxWidth: double.infinity);
-    return textPainter.size.width;
+  Widget _buildSegment(BuildContext context, String? chord, String lyric, Color textColor, Color chordColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          chord ?? '',
+          style: TextStyle(
+            fontSize: chordFontSize,
+            fontWeight: FontWeight.bold,
+            color: chordColor,
+            height: 1,
+          ),
+        ),
+        Text(
+          lyric,
+          style: TextStyle(
+            fontSize: lyricFontSize,
+            color: textColor,
+            height: 1.2,
+          ),
+        ),
+      ],
+    );
   }
 }

@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/services/auth_service.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final authService = AuthService();
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
 
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -53,11 +59,20 @@ class WelcomeScreen extends StatelessWidget {
                 context,
                 text: 'Sign in with Google',
                 icon: Icons.g_mobiledata,
+                isLoading: _isLoading,
                 onPressed: () async {
-                  final user = await authService.signInWithGoogle();
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  final user = await _authService.signInWithGoogle();
                   if (user != null) {
-                    if (!context.mounted) return;
+                    if (!mounted) return;
                     context.go('/home');
+                  }
+                  if (mounted) {
+                    setState(() {
+                      _isLoading = false;
+                    });
                   }
                 },
               ),
@@ -68,11 +83,20 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSignInButton(BuildContext context, {required String text, required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildSignInButton(BuildContext context, {required String text, required IconData icon, required VoidCallback onPressed, bool isLoading = false}) {
     return ElevatedButton.icon(
-      icon: Icon(icon, color: Colors.white),
-      label: Text(text, style: const TextStyle(color: Colors.white, fontSize: 16)),
-      onPressed: onPressed,
+      icon: isLoading ? Container() : Icon(icon, color: Colors.white),
+      label: isLoading
+          ? const SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : Text(text, style: const TextStyle(color: Colors.white, fontSize: 16)),
+      onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white.withAlpha(51),
         minimumSize: const Size(250, 50),

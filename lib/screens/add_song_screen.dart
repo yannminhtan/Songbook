@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:myapp/models/song_model.dart';
 import 'package:myapp/services/song_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/key_relation.dart';
 
 class AddSongScreen extends StatefulWidget {
   const AddSongScreen({super.key});
@@ -15,12 +16,48 @@ class _AddSongScreenState extends State<AddSongScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _artistController = TextEditingController();
+  final _composerController = TextEditingController();
   final _lyricsController = TextEditingController();
   final _keyController = TextEditingController();
   final _tempoController = TextEditingController();
 
   final SongService _songService = SongService();
   final _auth = FirebaseAuth.instance;
+  List<String> _suggestedChords = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _keyController.addListener(_updateSuggestedChords);
+  }
+
+  @override
+  void dispose() {
+    _keyController.removeListener(_updateSuggestedChords);
+    _titleController.dispose();
+    _artistController.dispose();
+    _composerController.dispose();
+    _lyricsController.dispose();
+    _keyController.dispose();
+    _tempoController.dispose();
+    super.dispose();
+  }
+
+  void _updateSuggestedChords() {
+    setState(() {
+      _suggestedChords = KeyRelation.getFamily(_keyController.text);
+    });
+  }
+
+  void _insertChord(String chord) {
+    final text = _lyricsController.text;
+    final selection = _lyricsController.selection;
+    final newText = text.replaceRange(selection.start, selection.end, '[$chord]');
+    _lyricsController.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: selection.start + chord.length + 2),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +76,8 @@ class _AddSongScreenState extends State<AddSongScreen> {
               const SizedBox(height: 16),
               _buildTextField(_artistController, 'Artist'),
               const SizedBox(height: 16),
+              _buildTextField(_composerController, 'Composer'),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -55,6 +94,25 @@ class _AddSongScreenState extends State<AddSongScreen> {
                 ],
               ),
               const SizedBox(height: 24),
+              if (_suggestedChords.isNotEmpty)
+                SizedBox(
+                  height: 40,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _suggestedChords.length,
+                    itemBuilder: (context, index) {
+                      final chord = _suggestedChords[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                        child: ElevatedButton(
+                          onPressed: () => _insertChord(chord),
+                          child: Text(chord),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 16),
               _buildTextField(
                 _lyricsController,
                 'Lyrics with Chords',
@@ -106,16 +164,17 @@ class _AddSongScreenState extends State<AddSongScreen> {
         id: '', 
         title: _titleController.text,
         artist: _artistController.text,
+        composer: _composerController.text,
         lyrics: _lyricsController.text,
         key: _keyController.text,
         tempo: int.tryParse(_tempoController.text),
         uploaderId: user.uid,
       );
 
-      await _songService.addSong(newSong);
+      final songId = await _songService.addSong(newSong);
       
       if (!mounted) return;
-      context.pop();
+      GoRouter.of(context).push('/song/$songId');
     }
   }
 }

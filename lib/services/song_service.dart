@@ -13,8 +13,19 @@ class SongService {
   }
 
   // Add a new song
-  Future<void> addSong(Song song) {
-    return _songsCollection.add(song.toMap());
+  Future<String> addSong(Song song) async {
+    final query = await _songsCollection
+        .where('title', isEqualTo: song.title)
+        .where('artist', isEqualTo: song.artist)
+        .limit(1)
+        .get();
+
+    if (query.docs.isNotEmpty) {
+      return query.docs.first.id;
+    }
+
+    final docRef = await _songsCollection.add(song.toMap());
+    return docRef.id;
   }
 
   // Get a stream of songs

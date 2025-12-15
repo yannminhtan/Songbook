@@ -7,7 +7,7 @@ import 'package:myapp/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:myapp/screens/welcome_screen.dart';
 import 'package:myapp/screens/home_screen.dart';
-import 'package:myapp/screens/song_screen.dart';
+import 'package:myapp/screens/song_detail_screen.dart';
 import 'package:myapp/screens/add_song_screen.dart';
 import 'package:myapp/screens/edit_song_screen.dart';
 
@@ -26,31 +26,30 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final router = GoRouter(
       initialLocation: '/',
+      redirect: (context, state) {
+        final loggedIn = FirebaseAuth.instance.currentUser != null;
+        final loggingIn = state.matchedLocation == '/welcome';
+
+        if (!loggedIn && !loggingIn) {
+          return '/welcome';
+        }
+        if (loggedIn && loggingIn) {
+          return '/';
+        }
+        return null;
+      },
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) {
-            return StreamBuilder(
-              stream: FirebaseAuth.instance.authStateChanges(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                }
-                if (snapshot.hasData) {
-                  return const HomeScreen();
-                }
-                return const WelcomeScreen();
-              },
-            );
-          },
-        ),
-        GoRoute(
-          path: '/home',
           builder: (context, state) => const HomeScreen(),
         ),
         GoRoute(
+          path: '/welcome',
+          builder: (context, state) => const WelcomeScreen(),
+        ),
+        GoRoute(
           path: '/song/:id',
-          builder: (context, state) => SongScreen(
+          builder: (context, state) => SongDetailScreen(
             songId: state.pathParameters['id']!,
           ),
         ),

@@ -4,6 +4,7 @@ class Song {
   final String id;
   final String title;
   final String artist;
+  final String? composer;
   final String lyrics;
   final String? key;
   final int? tempo;
@@ -13,6 +14,7 @@ class Song {
     required this.id,
     required this.title,
     required this.artist,
+    this.composer,
     required this.lyrics,
     this.key,
     this.tempo,
@@ -24,6 +26,7 @@ class Song {
     return {
       'title': title,
       'artist': artist,
+      'composer': composer,
       'lyrics': lyrics,
       'key': key,
       'tempo': tempo,
@@ -38,6 +41,7 @@ class Song {
       id: doc.id,
       title: data['title'] ?? '',
       artist: data['artist'] ?? '',
+      composer: data['composer'] as String?,
       lyrics: data['lyrics'] ?? '',
       key: data['key'] as String?,
       tempo: data['tempo'] as int?,
@@ -50,6 +54,7 @@ class Song {
     String? id,
     String? title,
     String? artist,
+    String? composer,
     String? lyrics,
     String? key,
     int? tempo,
@@ -59,6 +64,7 @@ class Song {
       id: id ?? this.id,
       title: title ?? this.title,
       artist: artist ?? this.artist,
+      composer: composer ?? this.composer,
       lyrics: lyrics ?? this.lyrics,
       key: key ?? this.key,
       tempo: tempo ?? this.tempo,
