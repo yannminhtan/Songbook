@@ -30,17 +30,24 @@ class _AddSongScreenState extends State<AddSongScreen> {
   void initState() {
     super.initState();
     _keyController.addListener(_updateSuggestedChords);
-    _titleController.addListener(_setContentChanged);
-    _artistController.addListener(_setContentChanged);
-    _composerController.addListener(_setContentChanged);
-    _lyricsController.addListener(_setContentChanged);
-    _keyController.addListener(_setContentChanged);
-    _tempoController.addListener(_setContentChanged);
+    _titleController.addListener(_onContentChanged);
+    _artistController.addListener(_onContentChanged);
+    _composerController.addListener(_onContentChanged);
+    _lyricsController.addListener(_onContentChanged);
+    _keyController.addListener(_onContentChanged);
+    _tempoController.addListener(_onContentChanged);
   }
 
   @override
   void dispose() {
     _keyController.removeListener(_updateSuggestedChords);
+    _titleController.removeListener(_onContentChanged);
+    _artistController.removeListener(_onContentChanged);
+    _composerController.removeListener(_onContentChanged);
+    _lyricsController.removeListener(_onContentChanged);
+    _keyController.removeListener(_onContentChanged);
+    _tempoController.removeListener(_onContentChanged);
+    
     _titleController.dispose();
     _artistController.dispose();
     _composerController.dispose();
@@ -50,7 +57,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
     super.dispose();
   }
 
-  void _setContentChanged() {
+  void _onContentChanged() {
     if (!_isContentChanged) {
       setState(() {
         _isContentChanged = true;
@@ -67,44 +74,58 @@ class _AddSongScreenState extends State<AddSongScreen> {
   void _insertChord(String chord) {
     final text = _lyricsController.text;
     final selection = _lyricsController.selection;
-    final newText = text.replaceRange(selection.start, selection.end, '[$chord]');
+    final newText =
+        text.replaceRange(selection.start, selection.end, '[$chord]');
     _lyricsController.value = TextEditingValue(
       text: newText,
-      selection: TextSelection.collapsed(offset: selection.start + chord.length + 2),
+      selection:
+          TextSelection.collapsed(offset: selection.start + chord.length + 2),
     );
   }
 
-  Future<bool> _onWillPop() async {
-    if (!_isContentChanged) {
-      return true;
+  Future<String?> _saveSong() async {
+    if (!_formKey.currentState!.validate()) {
+      return null;
     }
 
-    final shouldPop = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Save changes?'),
-        content: const Text('Do you want to save the changes you made?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Don\'t Save'),
-          ),
-          TextButton(
-            onPressed: () {
-              _addSong();
-              Navigator.of(context).pop(true);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+    final user = _auth.currentUser;
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (user == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('You must be logged in to add a song.')),
+      );
+      return null;
+    }
+
+    final newSong = Song(
+      id: '',
+      title: _titleController.text,
+      artist: _artistController.text,
+      composer: _composerController.text,
+      lyrics: _lyricsController.text,
+      key: _keyController.text,
+      tempo: int.tryParse(_tempoController.text),
+      uploaderId: user.uid,
     );
 
-    return shouldPop ?? false;
+    try {
+      final songId = await _songService.addSong(newSong);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Song added successfully!')),
+      );
+      if (mounted) {
+        setState(() {
+          _isContentChanged = false;
+        });
+      }
+      return songId;
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to add song: $e')),
+      );
+      return null;
+    }
   }
 
   @override
@@ -113,9 +134,42 @@ class _AddSongScreenState extends State<AddSongScreen> {
       canPop: !_isContentChanged,
       onPopInvoked: (didPop) async {
         if (didPop) return;
-        final shouldPop = await _onWillPop();
-        if (shouldPop) {
-          if(mounted) Navigator.pop(context);
+
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('မသိမ်းရသေးသော အပြောင်းအလဲများ'),
+            content: const Text('သင်ပြုလုပ်ထားသော အပြောင်းအလဲများကို သိမ်းဆည်းလိုပါသလား?'),
+            actions: [
+              TextButton(
+                child: const Text('မသိမ်းဘူး'),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              ),
+              TextButton(
+                child: const Text('မလုပ်တော့ဘူး'),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+              FilledButton(
+                child: const Text('သိမ်းမယ်'),
+                onPressed: () async {
+                  final songId = await _saveSong();
+                  if (songId != null && mounted) {
+                    Navigator.of(context).pop(true);
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+
+        if (shouldPop ?? false) {
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
         }
       },
       child: Scaffold(
@@ -138,7 +192,8 @@ class _AddSongScreenState extends State<AddSongScreen> {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: _buildTextField(_composerController, 'Composer', isRequired: false),
+                      child: _buildTextField(_composerController, 'Composer',
+                          isRequired: false),
                     ),
                   ],
                 ),
@@ -146,7 +201,8 @@ class _AddSongScreenState extends State<AddSongScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTextField(_keyController, 'Key (e.g., G, Am)'),
+                      child:
+                          _buildTextField(_keyController, 'Key (e.g., G, Am)'),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -168,7 +224,8 @@ class _AddSongScreenState extends State<AddSongScreen> {
                       itemBuilder: (context, index) {
                         final chord = _suggestedChords[index];
                         return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 4.0),
                           child: ElevatedButton(
                             onPressed: () => _insertChord(chord),
                             child: Text(chord),
@@ -178,15 +235,17 @@ class _AddSongScreenState extends State<AddSongScreen> {
                     ),
                   ),
                 const SizedBox(height: 16),
-                _buildTextField(
-                  _lyricsController,
-                  'Lyrics with Chords',
-                  maxLines: 15,
-                  hint: 'Use [C]Am to specify chords. e.g., မင်း[G]မချစ်တဲ့ လော[C]ကမှာကိုယ့်ဘဝ'
-                ),
+                _buildTextField(_lyricsController, 'Lyrics with Chords',
+                    maxLines: 15,
+                    hint: 'Use [C]Am to specify chords. e.g., မင်း[G]မချစ်တဲ့ လော[C]ကမှာကိုယ့်ဘဝ'),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _addSong,
+                  onPressed: () async {
+                    final songId = await _saveSong();
+                    if (songId != null && mounted) {
+                      GoRouter.of(context).push('/song/$songId');
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     textStyle: const TextStyle(fontSize: 18),
@@ -201,7 +260,11 @@ class _AddSongScreenState extends State<AddSongScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {int maxLines = 1, TextInputType? keyboardType, String? hint, bool isRequired = true}) {
+  Widget _buildTextField(TextEditingController controller, String label,
+      {int maxLines = 1,
+      TextInputType? keyboardType,
+      String? hint,
+      bool isRequired = true}) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -212,35 +275,8 @@ class _AddSongScreenState extends State<AddSongScreen> {
       ),
       maxLines: maxLines,
       keyboardType: keyboardType,
-      validator: (value) => isRequired && value!.isEmpty ? 'Please enter the $label' : null,
+      validator: (value) =>
+          isRequired && value!.isEmpty ? 'Please enter the $label' : null,
     );
-  }
-
-  void _addSong() async {
-    if (_formKey.currentState!.validate()) {
-      final user = _auth.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You must be logged in to add a song.')),
-        );
-        return;
-      }
-
-      final newSong = Song(
-        id: '', 
-        title: _titleController.text,
-        artist: _artistController.text,
-        composer: _composerController.text,
-        lyrics: _lyricsController.text,
-        key: _keyController.text,
-        tempo: int.tryParse(_tempoController.text),
-        uploaderId: user.uid,
-      );
-
-      final songId = await _songService.addSong(newSong);
-      
-      if (!mounted) return;
-      GoRouter.of(context).push('/song/$songId');
-    }
   }
 }
