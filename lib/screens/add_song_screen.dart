@@ -74,9 +74,17 @@ class _AddSongScreenState extends State<AddSongScreen> {
             children: <Widget>[
               _buildTextField(_titleController, 'Title'),
               const SizedBox(height: 16),
-              _buildTextField(_artistController, 'Artist'),
-              const SizedBox(height: 16),
-              _buildTextField(_composerController, 'Composer'),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(_artistController, 'Artist'),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(_composerController, 'Composer', isRequired: false),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -135,7 +143,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {int maxLines = 1, TextInputType? keyboardType, String? hint}) {
+  Widget _buildTextField(TextEditingController controller, String label, {int maxLines = 1, TextInputType? keyboardType, String? hint, bool isRequired = true}) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -146,7 +154,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
       ),
       maxLines: maxLines,
       keyboardType: keyboardType,
-      validator: (value) => value!.isEmpty ? 'Please enter the $label' : null,
+      validator: (value) => isRequired && value!.isEmpty ? 'Please enter the $label' : null,
     );
   }
 

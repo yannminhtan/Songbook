@@ -95,9 +95,17 @@ class _EditSongScreenState extends State<EditSongScreen> {
                 children: <Widget>[
                   _buildTextField(_titleController, 'Title'),
                   const SizedBox(height: 16),
-                  _buildTextField(_artistController, 'Artist'),
-                  const SizedBox(height: 16),
-                  _buildTextField(_composerController, 'Composer'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(_artistController, 'Artist'),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildTextField(_composerController, 'Composer'),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [

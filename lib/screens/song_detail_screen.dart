@@ -67,13 +67,21 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
           appBar: AppBar(
             leading: BackButton(onPressed: () => GoRouter.of(context).go('/')),
             title: Text(song.title),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  GoRouter.of(context).go('/edit-song/${song.id}');
+                },
+              ),
+            ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(song.title, style: Theme.of(context).textTheme.headlineMedium),
+                Text(song.title, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Text('Artist: ${song.artist}', style: Theme.of(context).textTheme.titleMedium),
                 if (song.composer != null && song.composer!.isNotEmpty)
