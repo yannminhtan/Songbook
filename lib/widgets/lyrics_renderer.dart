@@ -7,6 +7,9 @@ class LyricsRenderer extends StatelessWidget {
   final Color? textColor;
   final Color? chordColor;
 
+  static final _segmentRegex = RegExp(r'(?=\[)'); // split before '['
+  static final _chordRegex = RegExp(r'\[([^\]]+)\](.*)', dotAll: true);
+
   const LyricsRenderer({
     super.key,
     required this.content,
@@ -32,7 +35,7 @@ class LyricsRenderer extends StatelessWidget {
   }
 
   Widget _buildLine(BuildContext context, String line, Color textColor, Color chordColor) {
-    final segments = line.split(RegExp(r'(?=\[)')); // split before '['
+    final segments = line.split(_segmentRegex);
 
     if (segments.isEmpty) {
       return Container();
@@ -48,7 +51,7 @@ class LyricsRenderer extends StatelessWidget {
         children: segments.map((segment) {
           if (segment.isEmpty) return const SizedBox.shrink();
 
-          final match = RegExp(r'\[([^\]]+)\](.*)', dotAll: true).firstMatch(segment);
+          final match = _chordRegex.firstMatch(segment);
 
           if (match != null) {
             final chord = match.group(1)!;
@@ -62,7 +65,8 @@ class LyricsRenderer extends StatelessWidget {
     );
   }
 
-  Widget _buildSegment(BuildContext context, String? chord, String lyric, Color textColor, Color chordColor) {
+  Widget _buildSegment(
+      BuildContext context, String? chord, String lyric, Color textColor, Color chordColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,

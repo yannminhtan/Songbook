@@ -11,7 +11,7 @@ class KeyRelation {
       return chord; 
     }
     final int transposedIndex = (rootIndex + semitones) % _chromaticScale.length;
-    return _chromaticScale[transposedIndex] + (isMinor ? 'm' : '');
+    return '${_chromaticScale[transposedIndex]}${isMinor ? 'm' : ''}';
   }
 
   static List<String> getFamily(String key) {
@@ -33,11 +33,11 @@ class KeyRelation {
     } else {
       return [
         _chromaticScale[rootIndex],
-        _chromaticScale[(rootIndex + 2) % 12] + 'm',
-        _chromaticScale[(rootIndex + 4) % 12] + 'm',
+        '${_chromaticScale[(rootIndex + 2) % 12]}m',
+        '${_chromaticScale[(rootIndex + 4) % 12]}m',
         _chromaticScale[(rootIndex + 5) % 12],
         _chromaticScale[(rootIndex + 7) % 12],
-        _chromaticScale[(rootIndex + 9) % 12] + 'm',
+        '${_chromaticScale[(rootIndex + 9) % 12]}m',
       ];
     }
   }

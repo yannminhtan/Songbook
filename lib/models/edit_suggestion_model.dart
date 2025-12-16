@@ -6,14 +6,13 @@ class EditSuggestion {
   final String suggestedById;
   final String title;
   final String artist;
+  final String? composer;
   final String lyrics;
-  final String key;
-  final int tempo;
+  final String? key;
+  final int? tempo;
   final DateTime createdAt;
-  int upvotes;
-  int downvotes;
-  // 'pending', 'approved', 'rejected'
-  String status;
+  final int upvotes;
+  final int downvotes;
 
   EditSuggestion({
     required this.id,
@@ -21,13 +20,13 @@ class EditSuggestion {
     required this.suggestedById,
     required this.title,
     required this.artist,
+    this.composer, // Made composer an optional named parameter
     required this.lyrics,
-    required this.key,
-    required this.tempo,
+    this.key,
+    this.tempo,
     required this.createdAt,
     this.upvotes = 0,
     this.downvotes = 0,
-    this.status = 'pending',
   });
 
   factory EditSuggestion.fromFirestore(DocumentSnapshot doc) {
@@ -38,13 +37,13 @@ class EditSuggestion {
       suggestedById: data['suggestedById'] ?? '',
       title: data['title'] ?? '',
       artist: data['artist'] ?? '',
+      composer: data['composer'],
       lyrics: data['lyrics'] ?? '',
-      key: data['key'] ?? '',
-      tempo: data['tempo'] ?? 0,
+      key: data['key'],
+      tempo: data['tempo'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       upvotes: data['upvotes'] ?? 0,
       downvotes: data['downvotes'] ?? 0,
-      status: data['status'] ?? 'pending',
     );
   }
 
@@ -54,13 +53,13 @@ class EditSuggestion {
       'suggestedById': suggestedById,
       'title': title,
       'artist': artist,
+      'composer': composer,
       'lyrics': lyrics,
       'key': key,
       'tempo': tempo,
-      'createdAt': createdAt,
+      'createdAt': Timestamp.fromDate(createdAt),
       'upvotes': upvotes,
       'downvotes': downvotes,
-      'status': status,
     };
   }
 }

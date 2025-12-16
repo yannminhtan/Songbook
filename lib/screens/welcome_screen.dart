@@ -61,15 +61,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 icon: Icons.g_mobiledata,
                 isLoading: _isLoading,
                 onPressed: () async {
+                  final router = GoRouter.of(context);
                   setState(() {
                     _isLoading = true;
                   });
                   final user = await _authService.signInWithGoogle();
+                  if (!mounted) return;
                   if (user != null) {
-                    if (!mounted) return;
-                    context.go('/home');
-                  }
-                  if (mounted) {
+                    router.go('/home');
+                  } else {
                     setState(() {
                       _isLoading = false;
                     });

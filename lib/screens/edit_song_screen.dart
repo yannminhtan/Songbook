@@ -19,7 +19,7 @@ class _EditSongScreenState extends State<EditSongScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _artistController = TextEditingController();
-  final _composerController = TextEditingController(); // Added composer
+  final _composerController = TextEditingController();
   final _lyricsController = TextEditingController();
   final _keyController = TextEditingController();
   final _tempoController = TextEditingController();
@@ -36,11 +36,11 @@ class _EditSongScreenState extends State<EditSongScreen> {
     _songFuture.then((song) {
       _titleController.text = song.title;
       _artistController.text = song.artist;
-      _composerController.text = song.composer ?? ''; // Added composer
+      _composerController.text = song.composer ?? '';
       _lyricsController.text = song.lyrics;
       _keyController.text = song.key ?? '';
       _tempoController.text = song.tempo?.toString() ?? '';
-      _updateSuggestedChords(); // Initial chord suggestions
+      _updateSuggestedChords();
     });
     _keyController.addListener(_updateSuggestedChords);
   }
@@ -97,7 +97,7 @@ class _EditSongScreenState extends State<EditSongScreen> {
                   const SizedBox(height: 16),
                   _buildTextField(_artistController, 'Artist'),
                   const SizedBox(height: 16),
-                  _buildTextField(_composerController, 'Composer'), // Added composer
+                  _buildTextField(_composerController, 'Composer'),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -138,7 +138,7 @@ class _EditSongScreenState extends State<EditSongScreen> {
                     _lyricsController, 
                     'Lyrics with Chords', 
                     maxLines: 15, 
-                    hint: 'Use [C]Am to specify chords. e.g., မင်း[G]မချစ်တဲ့ လော[C]ကမှာကိုယ့်ဘဝ'
+                    hintText: 'Use [C]Am to specify chords. e.g., မင်း[G]မချစ်တဲ့ လော[C]ကမှာကိုယ့်ဘဝ'
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
@@ -158,26 +158,29 @@ class _EditSongScreenState extends State<EditSongScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {int maxLines = 1, TextInputType? keyboardType, String? hint}) {
+  Widget _buildTextField(TextEditingController controller, String label, {int maxLines = 1, TextInputType? keyboardType, String? hintText}) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        hintText: hint,
+        hintText: hintText,
         border: const OutlineInputBorder(),
         alignLabelWithHint: true,
       ),
       maxLines: maxLines,
       keyboardType: keyboardType,
-      validator: (value) => value!.isEmpty && label != 'Composer' ? 'Please enter the $label' : null, // Composer can be optional
+      validator: (value) => value!.isEmpty && label != 'Composer' ? 'Please enter the $label' : null, 
     );
   }
 
   void _submitSuggestion() async {
     if (_formKey.currentState!.validate()) {
       final user = _auth.currentUser;
+      final router = GoRouter.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('You must be logged in to suggest an edit.')),
         );
         return;
@@ -189,7 +192,7 @@ class _EditSongScreenState extends State<EditSongScreen> {
         suggestedById: user.uid,
         title: _titleController.text,
         artist: _artistController.text,
-        composer: _composerController.text, // Added composer
+        composer: _composerController.text, 
         lyrics: _lyricsController.text,
         key: _keyController.text,
         tempo: int.tryParse(_tempoController.text) ?? 0,
@@ -198,11 +201,10 @@ class _EditSongScreenState extends State<EditSongScreen> {
 
       await _songService.submitEditSuggestion(suggestion);
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text('Thank you! Your suggestion has been submitted.')),
       );
-      context.pop();
+      router.pop();
     }
   }
 }
