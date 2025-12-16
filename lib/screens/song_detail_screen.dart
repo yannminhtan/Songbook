@@ -65,13 +65,13 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            leading: BackButton(onPressed: () => GoRouter.of(context).go('/')),
+            leading: const BackButton(),
             title: Text(song.title),
             actions: [
               IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: () {
-                  GoRouter.of(context).go('/edit-song/${song.id}');
+                  context.push('/edit-song/${song.id}');
                 },
               ),
             ],
