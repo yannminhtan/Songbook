@@ -89,12 +89,13 @@ class _AddSongScreenState extends State<AddSongScreen> {
     }
 
     final user = _auth.currentUser;
-    final messenger = ScaffoldMessenger.of(context);
 
     if (user == null) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('You must be logged in to add a song.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You must be logged in to add a song.')),
+        );
+      }
       return null;
     }
 
@@ -111,19 +112,21 @@ class _AddSongScreenState extends State<AddSongScreen> {
 
     try {
       final songId = await _songService.addSong(newSong);
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Song added successfully!')),
-      );
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Song added successfully!')),
+        );
         setState(() {
           _isContentChanged = false;
         });
       }
       return songId;
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Failed to add song: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add song: $e')),
+        );
+      }
       return null;
     }
   }
@@ -132,7 +135,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: !_isContentChanged,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
 
         final shouldPop = await showDialog<bool>(
@@ -144,20 +147,24 @@ class _AddSongScreenState extends State<AddSongScreen> {
               TextButton(
                 child: const Text('မသိမ်းဘူး'),
                 onPressed: () {
-                  Navigator.of(context).pop(true);
+                  if (context.mounted) {
+                    Navigator.of(context).pop(true);
+                  }
                 },
               ),
               TextButton(
                 child: const Text('မလုပ်တော့ဘူး'),
                 onPressed: () {
-                  Navigator.of(context).pop(false);
+                  if (context.mounted) {
+                    Navigator.of(context).pop(false);
+                  }
                 },
               ),
               FilledButton(
                 child: const Text('သိမ်းမယ်'),
                 onPressed: () async {
                   final songId = await _saveSong();
-                  if (songId != null && mounted) {
+                  if (songId != null && context.mounted) {
                     Navigator.of(context).pop(true);
                   }
                 },
@@ -167,7 +174,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
         );
 
         if (shouldPop ?? false) {
-          if (mounted) {
+          if (context.mounted) {
             Navigator.of(context).pop();
           }
         }
@@ -242,7 +249,7 @@ class _AddSongScreenState extends State<AddSongScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     final songId = await _saveSong();
-                    if (songId != null && mounted) {
+                    if (songId != null && context.mounted) {
                       GoRouter.of(context).push('/song/$songId');
                     }
                   },

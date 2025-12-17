@@ -104,13 +104,14 @@ class _EditSongScreenState extends State<EditSongScreen> {
     }
 
     final user = _auth.currentUser;
-    final messenger = ScaffoldMessenger.of(context);
 
     if (user == null) {
-      messenger.showSnackBar(
-        const SnackBar(
-            content: Text('You must be logged in to suggest an edit.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('You must be logged in to suggest an edit.')),
+        );
+      }
       return false;
     }
 
@@ -129,20 +130,22 @@ class _EditSongScreenState extends State<EditSongScreen> {
 
     try {
       await _songService.submitEditSuggestion(suggestion);
-      messenger.showSnackBar(
-        const SnackBar(
-            content: Text('Thank you! Your suggestion has been submitted.')),
-      );
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Thank you! Your suggestion has been submitted.')),
+        );
         setState(() {
           _isContentChanged = false;
         });
       }
       return true;
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Failed to submit suggestion: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit suggestion: $e')),
+        );
+      }
       return false;
     }
   }
@@ -151,7 +154,7 @@ class _EditSongScreenState extends State<EditSongScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: !_isContentChanged,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
 
         final shouldPop = await showDialog<bool>(
@@ -163,20 +166,24 @@ class _EditSongScreenState extends State<EditSongScreen> {
               TextButton(
                 child: const Text('မသိမ်းဘူး'),
                 onPressed: () {
-                  Navigator.of(context).pop(true);
+                  if (context.mounted) {
+                    Navigator.of(context).pop(true);
+                  }
                 },
               ),
               TextButton(
                 child: const Text('မလုပ်တော့ဘူး'),
                 onPressed: () {
-                  Navigator.of(context).pop(false);
+                  if (context.mounted) {
+                    Navigator.of(context).pop(false);
+                  }
                 },
               ),
               FilledButton(
                 child: const Text('သိမ်းမယ်'),
                 onPressed: () async {
                   final success = await _saveChanges();
-                  if (success && mounted) {
+                  if (success && context.mounted) {
                     Navigator.of(context).pop(true);
                   }
                 },
@@ -186,7 +193,7 @@ class _EditSongScreenState extends State<EditSongScreen> {
         );
 
         if (shouldPop ?? false) {
-          if (mounted) {
+          if (context.mounted) {
             Navigator.of(context).pop();
           }
         }
@@ -268,7 +275,7 @@ class _EditSongScreenState extends State<EditSongScreen> {
                     ElevatedButton(
                       onPressed: () async {
                         if (await _saveChanges()) {
-                          if (mounted) context.pop();
+                          if (context.mounted) context.pop();
                         }
                       },
                       style: ElevatedButton.styleFrom(
